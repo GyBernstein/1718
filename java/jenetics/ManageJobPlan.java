@@ -8,13 +8,6 @@ import java.util.stream.Collector;
 import static java.lang.String.format;
 
 
-/** 
- * 
-* <p>Title: ManageJobPlan</p>  
-* <p>Description:作业计划管理主表 </p>  
-* @author fansh  
-* @date 2018年10月16日
- */
 public class ManageJobPlan implements Serializable {
     private String jobId;
     private Double operateTime;
