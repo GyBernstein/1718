@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link href="./css/style.css" type="text/css" rel="stylesheet">
+</head>
+<body>
+
+<div class="gantt"></div>
+<!-- jquery -->
+<script type="text/javascript" src="../../js/jquery.min.js" ></script>
+		<script type="text/javascript" src="../../js/bootstrap.min.js" ></script>
+		<script type="text/javascript" src="../../js/jquery.easyui.min.js" ></script>
+		<script src="../../js/mes/jquery.jedate.js"></script>
+
+
+		<!-- common js jquery封装的通用组件 -->
+		<script type="text/javascript" src="../../js/mes/table.js"></script>
+		<script type="text/javascript" src="../../js/mes/modal_new.js"></script>
+		<script type="text/javascript" src="../../js/mes/common.js"></script>
+		<script type="text/javascript" src="../../js/mes/base_datamap.js" ></script>
+		<script type="text/javascript" src="../../js/mes//common_baseparse.js"></script>
+		<script type="text/javascript" src="../../js/mes/common_parse.js"></script>
+		<script type="text/javascript" src="../../js/mes/common_selectBase.js"></script>
+		<script type="text/javascript" src="../../js/mes/common_baseCheck.js"></script>
+		<script type="text/javascript" src="../../js/mes/common-checkbox.js"></script>
+		<script type="text/javascript" src="../../js/mes/I18n/message_zh.js"></script>
+		<script type="text/javascript" src="../../js/mes/bootstrap3-validation.js"></script>
+		<script type="text/javascript" src="../../js/mes/bootstrap-select/bootstrap-select.js"></script>    
+		<script src="./js/jquery.fn.gantt.min.js"></script>
+
+<script>
+$(function() {
+	$.ajax({
+		type:"get",
+		url:$.mpbGetHeaderPath() +"/jobview/gantt/data",
+		dataType : "JSON",
+		async : false,
+		data:{},
+		success:function(res){
+            if(res.success){
+            	creatGantt(res);
+            }else{
+            	$(".gantt").append($("<p style='text-align:center;'>暂无数据！</p>"));
+            }
+		},error: function(data) {
+	    	var result=JSON.parse(decodeURIComponent(data.responseText));
+			$.messager.alert(MESResource["common.notice"], result.message);
+	    }
+	});
+
+	function getRefData(root, op) {
+	    return new Function('x', 'return x.'+op)(root);
+	}
+	function getTime(data){
+		var times = new Date(data);
+		console.log(times.getFullYear());
+		return times.getFullYear()+"/"+times.getMonth()+"/"+times.getDate()+" "+times.getHours()+":"+times.getMinutes()+":"+times.getSeconds();
+	}
+	function creatGantt(res){
+		console.log(res)
+		var source = [];
+		var data = res.dataList;
+		data.forEach(function(buff){
+			
+			var sbuf = {};
+				sbuf.name = buff.name?buff.name:"缺少";
+				sbuf.desc = "";
+			var datalist = buff.values;
+			var colors = ["ganttBule","ganttGreen","ganttOrange","ganttRed","ganttCompleted"]
+			var valus = [];
+			
+			datalist.forEach(function(dom){
+				console.log(dom);
+			    if(dom.$ref) {
+			        var g = dom.$ref;
+			        dom = getRefData(res, g.substring(2));
+				}
+				var d = {};
+				d.from = dom.from;
+				d.to = dom.to;
+				if(dom.vacation)
+				{
+					d.label = dom.label;
+					d.customClass = colors[3];
+					d.desc = "";
+				}
+				else if(dom.completed){
+					d.label = dom.label;
+					d.customClass = colors[4];
+					d.desc = "";
+				}
+				else
+				{
+					d.label = Math.floor(dom.percent*1)+"%";
+					d.customClass = colors[dom.jobStatus];
+					d.desc = "<p><span>工单号:</span>"+ dom.jobId +"</p>"+
+							 "<p><span>开始时间:</span>"+ getTime(dom.from) +"</p>"+
+							 "<p><span>结束时间:</span>"+ getTime(dom.to) +"</p>"+
+							 "<p><span>计划数量:</span>"+ dom.planNum +"</p>"+
+							 "<p><span>完成数量:</span>"+ dom.quantity +"</p>"+
+							 "<p><span>完成进度:</span>"+ d.label +"</p>";
+				}
+				
+				if(dom.vacation){
+					valus.unshift(d);
+				}else{
+					valus.push(d);
+				}
+				
+			});
+			console.log(valus);
+			sbuf.values = valus;
+			source.push(sbuf);
+		});
+		
+		//console.log(source)
+		 $(".gantt").gantt({
+	         source: source,
+	         navigate: "scroll",
+	         maxScale: "hours",
+	         months:["一月","二月","三月","四月","五月","六月","七月","八月","九月","十月","十一月","十二月"],
+	         dow:["日","一","二","三","四","五","六"],
+	         itemsPerPage: 10,
+	         onItemClick: function(data) {
+	            
+	         },
+	         onAddClick: function(dt, rowId) {
+	            
+	         },
+	         onRender: function() {
+	             if (window.console && typeof console.log === "function") {
+	                 console.log("chart rendered");
+	             }
+	         }
+	     });
+	}
+	
+})
+</script>
+</body>
+</html>
